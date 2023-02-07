@@ -1,0 +1,51 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_binary", "rust_test", "rust_test_suite")
+load("@rules_rust//cargo:cargo_build_script.bzl", "cargo_build_script")
+
+package(default_visibility = ["//visibility:public"])
+
+
+DEPENDENCIES = [
+  "@crate_index//:anyhow",
+  "@crate_index//:base64",
+  "@crate_index//:bincode",
+  "@crate_index//:codicon",
+  "@crate_index//:colorful",
+  "@crate_index//:env_logger",
+  "@crate_index//:httparse",
+  "@crate_index//:libc",
+  "@crate_index//:log",
+  "@crate_index//:native-tls",
+  "@crate_index//:openssl",
+  "@crate_index//:serde",
+  "@crate_index//:serde_json",
+  "@crate_index//:sev",
+  "@crate_index//:structopt",
+  "@crate_index//:url",
+  "@crate_index//:uuid"
+]
+
+MACRO_DEPENDENCIES = []
+
+BUILD_DEPENDENCIES = []
+
+ALIASES = {}
+
+
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    version = "0.3.2",
+    deps = BUILD_DEPENDENCIES,
+    aliases = ALIASES,
+    data = [], # build script data (e.g. template files) goes here
+)
+
+rust_library(
+    name = "sevctl",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "sevctl",
+    edition = "2018",
+    proc_macro_deps = MACRO_DEPENDENCIES,
+    deps = DEPENDENCIES + [":build_script"],
+    aliases = ALIASES
+)
