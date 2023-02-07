@@ -315,7 +315,6 @@ mod show {
                     .get_identifier()
                     .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))
                     .context("error fetching identifier")?;
-                //let id = format!("{}", id).to_lowercase();
                 let snp_status = snp_platform_status()?;
                 println!("https://kdsintf.amd.com/vcek/v1/Milan/{}?blSPL={:02}&teeSPL={:02}&snpSPL={:02}&ucodeSPL={:02}",
                          id, snp_status.tcb.platform_version.bootloader, snp_status.tcb.platform_version.tee,  snp_status.tcb.platform_version.snp,  snp_status.tcb.platform_version.microcode); 
