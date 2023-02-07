@@ -16,7 +16,7 @@ use structopt::StructOpt;
 use codicon::*;
 
 use ::sev::certs::*;
-use ::sev::firmware::host::{types::Status, Firmware, PlatformStatusFlags};
+use ::sev::firmware::host::{types::Status, types::SnpStatus, Firmware, PlatformStatusFlags};
 use ::sev::Generation;
 
 use std::fs::File;
@@ -186,6 +186,13 @@ fn platform_status() -> Result<Status> {
         .context("unable to fetch platform status")
 }
 
+fn snp_platform_status() -> Result<SnpStatus> {
+    firmware()?
+        .snp_platform_status()
+        .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))
+        .context("unable to fetch snp platform status")
+}
+
 fn chain() -> Result<sev::Chain> {
     const CEK_SVC: &str = "https://kdsintf.amd.com/cek/id";
 
@@ -270,6 +277,15 @@ mod show {
         #[structopt(about = "Show the current number of guests")]
         Guests,
 
+        #[structopt(about = "Show the platform identifier")]
+        Identifier,
+
+        #[structopt(about = "Show the SNP platform status")]
+        SnpStatus,
+
+        #[structopt(about = "Show the VCEK DER download URL")]
+        VcekUrl,
+
         #[structopt(about = "Show the platform's firmware version")]
         Version,
     }
@@ -280,6 +296,27 @@ mod show {
         match show {
             Show::Version => println!("{}", status.build),
             Show::Guests => println!("{}", status.guests),
+            Show::Identifier => {
+                let id = firmware()?
+                    .get_identifier()
+                    .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))
+                    .context("error fetching identifier")?;
+                println!("{}", id);
+            }
+            Show::SnpStatus => {
+                let snp_status = snp_platform_status()?;
+                println!("{:#?}", snp_status);
+            }
+            Show::VcekUrl => {
+                let id = firmware()?
+                    .get_identifier()
+                    .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))
+                    .context("error fetching identifier")?;
+                //let id = format!("{}", id).to_lowercase();
+                let snp_status = snp_platform_status()?;
+                println!("https://kdsintf.amd.com/vcek/v1/Milan/{}?blSPL={:02}&teeSPL={:02}&snpSPL={:02}&ucodeSPL={:02}",
+                         id, snp_status.tcb.platform_version.bootloader, snp_status.tcb.platform_version.tee,  snp_status.tcb.platform_version.snp,  snp_status.tcb.platform_version.microcode); 
+            }
             Show::Flags => {
                 for f in [
                     PlatformStatusFlags::OWNED,
